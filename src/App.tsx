@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import dotenv from 'dotenv';
 import "./App.css";
 
 type Note = {
@@ -6,6 +7,7 @@ type Note = {
  title: string;
  content: string;
 }
+
 
 const App = () => {
  const [ notes, setNotes ] = useState<Note[]>([]);
@@ -20,7 +22,7 @@ const App = () => {
    const fetchNotes = async ()=> {
     try {
      const response =
-      await fetch("http://localhost:5000/api/notes")
+      await fetch(`http://localhost:5000/api/notes`)
 
      const notes: Note[] = await response.json()
      setNotes(notes)
@@ -46,7 +48,7 @@ const App = () => {
 
   try {
   const response = await fetch(
-   "http://localhost:5000/api/notes",
+   `http://localhost:5000/api/notes`,
    {
     method: "POST",
     headers: {
@@ -71,7 +73,7 @@ const App = () => {
 
  };
 
- const handleUpdateNote = (
+ const handleUpdateNote = async (
   event: React.FormEvent
  ) => {
   event.preventDefault();
@@ -80,31 +82,48 @@ const App = () => {
    return;
   }
  
- const updatedNote: Note = {
-  id: selectedNote.id,
-  title: title,
-  content: content,
- }
-
- const updatedNotesList = notes.map((note)=>
-  note.id === selectedNote.id
-  ? updatedNote
-  : note
+ try {
+ const response = await fetch(
+  `http://localhost:5000/api/notes/${selectedNote.id}`,
+  {
+   method: 'PUT',
+   headers: {
+    "Content-Type": "application/json"
+   },
+   body: JSON.stringify({
+     title,
+     content
+   })
+  }
  )
+
+
+ const updatedNote = await response.json();
+
+ const updatedNotesList = notes.map((note) =>
+  note.id === selectedNote.id
+   ? updatedNote
+   : note
+ );
 
  setNotes(updatedNotesList)
  setTitle("")
  setContent("")
  setSelectedNote(null);
 
- };
+ } catch (e) {
+  console.log(e);
+ }
+
+ }
 
  const handleCancel = () => {
   setTitle("")
   setContent("")
   setSelectedNote(null);
   
- }
+
+ } 
 
  const deleteNote = (
   event: React.MouseEvent,
